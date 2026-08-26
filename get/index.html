@@ -80,19 +80,6 @@ function renderFiles(files) {
     })
 }
 
-// 调用免费文件上传接口
-async function uploadToTemp(file) {
-    const form = new FormData();
-    form.append('file', file);
-    const res = await fetch('https://tmpfiles.org/api/v1/upload', {
-        method: 'POST',
-        body: form
-    });
-    const data = await res.json();
-    // 返回直接下载链接
-    return data.data.file.download_url;
-}
-
 // 提交上传
 submitBtn.addEventListener('click', async ()=>{
     const title = document.getElementById('fileTitle').value;
@@ -103,13 +90,13 @@ submitBtn.addEventListener('click', async ()=>{
     submitBtn.disabled = true;
     submitBtn.innerText = '上传中...';
     try{
-        // 先上传到临时存储获取外链
-        const downloadUrl = await uploadToTemp(file);
-        // 把标题、简介、外链存入数据库
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('desc', desc);
+        formData.append('file', file);
         await fetch('/api/upload',{
             method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({title, desc, download_url: downloadUrl})
+            body:formData
         });
         modal.style.display = 'none';
         loadFiles();
