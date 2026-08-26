@@ -22,6 +22,7 @@
         .modal-buttons {display:flex;gap:10px;justify-content:flex-end;}
         .cancel-btn {background:#888;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;}
         .submit-btn {background:#36c946;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;}
+        .tip {color:#666;font-size:14px;margin-bottom:10px;}
     </style>
 </head>
 <body>
@@ -36,6 +37,7 @@
     <div class="modal" id="uploadModal">
         <div class="modal-box">
             <h3>上传文件</h3>
+            <p class="tip">文件会上传至临时存储，仅用于共享下载</p>
             <input type="text" id="fileTitle" placeholder="文件标题" required>
             <textarea id="fileDesc" placeholder="文件简介" rows="3"></textarea>
             <input type="file" id="fileUpload" required>
@@ -72,30 +74,52 @@ function renderFiles(files) {
         card.innerHTML = `
             <div class="file-title">${file.title}</div>
             <div class="file-desc">${file.desc || '无简介'}</div>
-            <button class="download-btn" onclick="downloadFile('${file.id}')">下载文件</button>
+            <button class="download-btn" onclick="window.open('${file.download_url}')">下载文件</button>
         `;
         fileList.appendChild(card);
     })
 }
 
-// 下载文件
-function downloadFile(id) {
-    window.open(`/api/download/${id}`);
+// 调用免费文件上传接口
+async function uploadToTemp(file) {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+        method: 'POST',
+        body: form
+    });
+    const data = await res.json();
+    // 返回直接下载链接
+    return data.data.file.download_url;
 }
 
-// 上传文件
+// 提交上传
 submitBtn.addEventListener('click', async ()=>{
     const title = document.getElementById('fileTitle').value;
     const desc = document.getElementById('fileDesc').value;
     const file = document.getElementById('fileUpload').files[0];
     if(!title || !file){alert('请填写标题并选择文件');return;}
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('desc', desc);
-    formData.append('file', file);
-    await fetch('/api/upload',{method:'POST',body:formData});
-    modal.style.display = 'none';
-    loadFiles();
+    
+    submitBtn.disabled = true;
+    submitBtn.innerText = '上传中...';
+    try{
+        // 先上传到临时存储获取外链
+        const downloadUrl = await uploadToTemp(file);
+        // 把标题、简介、外链存入数据库
+        await fetch('/api/upload',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({title, desc, download_url: downloadUrl})
+        });
+        modal.style.display = 'none';
+        loadFiles();
+    }catch(err){
+        alert('上传失败，请重试');
+        console.error(err);
+    }finally{
+        submitBtn.disabled = false;
+        submitBtn.innerText = '上传';
+    }
 })
 
 openBtn.onclick = ()=>modal.style.display='flex';
