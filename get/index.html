@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>共享文件下载站</title>
+    <title>本地文件共享站</title>
     <style>
         * {margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif;}
         body {background:#f5f5f5;padding:20px;}
@@ -37,7 +37,7 @@
     <div class="modal" id="uploadModal">
         <div class="modal-box">
             <h3>上传文件</h3>
-            <p class="tip">文件会上传至临时存储，仅用于共享下载</p>
+            <p class="tip">小文件（5MB内）可直接上传共享</p>
             <input type="text" id="fileTitle" placeholder="文件标题" required>
             <textarea id="fileDesc" placeholder="文件简介" rows="3"></textarea>
             <input type="file" id="fileUpload" required>
@@ -74,9 +74,19 @@ function renderFiles(files) {
         card.innerHTML = `
             <div class="file-title">${file.title}</div>
             <div class="file-desc">${file.desc || '无简介'}</div>
-            <button class="download-btn" onclick="window.open('${file.download_url}')">下载文件</button>
+            <button class="download-btn" onclick="window.open('/api/download/${file.id}')">下载文件</button>
         `;
         fileList.appendChild(card);
+    })
+}
+
+// 文件转Base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     })
 }
 
@@ -86,17 +96,21 @@ submitBtn.addEventListener('click', async ()=>{
     const desc = document.getElementById('fileDesc').value;
     const file = document.getElementById('fileUpload').files[0];
     if(!title || !file){alert('请填写标题并选择文件');return;}
+    if(file.size > 5*1024*1024){alert('文件不能超过5MB');return;}
     
     submitBtn.disabled = true;
     submitBtn.innerText = '上传中...';
     try{
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('desc', desc);
-        formData.append('file', file);
+        const base64 = await fileToBase64(file);
         await fetch('/api/upload',{
             method:'POST',
-            body:formData
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+                title,
+                desc,
+                filename: file.name,
+                base64
+            })
         });
         modal.style.display = 'none';
         loadFiles();
