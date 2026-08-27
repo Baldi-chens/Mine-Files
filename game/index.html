@@ -1,20 +1,281 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Game</title>
-    <style>
-      body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#f3f4f6 }
-      .container { text-align:center }
-      h1 { color:#111827 }
-      p { color:#374151 }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Welcome to Game</h1>
-      <p>This is a placeholder index.html in the game folder.</p>
-    </div>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baldi-chens 游戏库</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&family=Comic+Neue:wght@400;700&display=swap">
+<style>
+  /* ===== 设计令牌（与主页一致） ===== */
+  :root {
+    --paper: #fbf7ee;
+    --ink: #2a2622;
+    --ink-soft: #5c564e;
+    --green: #2f7d4d;
+    --green-deep: #225c38;
+    --yellow: #f6c325;
+    --red: #e5484d;
+    --board: #23413a;
+    --line: #e4dbc8;
+    --shadow: 0 10px 30px rgba(42, 38, 34, .14);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Comic Neue", "Comic Sans MS", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 8%, rgba(246, 195, 37, .12), transparent 26%),
+      radial-gradient(circle at 88% 20%, rgba(61, 127, 191, .10), transparent 28%),
+      var(--paper);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  /* ===== 顶部导航条（与主页一致） ===== */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px clamp(16px, 4vw, 40px);
+    background: rgba(251, 247, 238, .92);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--line);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-family: "Comic Neue", "Comic Sans MS", "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+    font-size: 22px;
+    letter-spacing: .5px;
+    color: var(--green-deep);
+    padding: 6px 0;
+  }
+  .brand .star { width: 30px; height: 30px; flex: none; }
+  .nav { display: flex; align-items: center; gap: 4px; }
+  .nav a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 16px;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    border-radius: 12px;
+    transition: background .2s ease, color .2s ease;
+  }
+  .nav a:hover { background: rgba(47, 125, 77, .10); color: var(--green-deep); }
+  .nav a.active { background: rgba(47, 125, 77, .10); color: var(--green-deep); }
+  .nav a::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: 0;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--yellow);
+    transform: translateX(-50%);
+    transition: width .22s ease;
+  }
+  .nav a:hover::after, .nav a.active::after { width: 42%; }
+
+  /* ===== 页面标题 ===== */
+  .page-head {
+    text-align: center;
+    padding: clamp(36px, 6vw, 64px) clamp(16px, 4vw, 40px) 16px;
+  }
+  .page-head .eyebrow {
+    display: inline-block;
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--red);
+  }
+  .page-head h1 {
+    margin: 0;
+    font-family: "Comic Neue", "Comic Sans MS", "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+    font-size: clamp(30px, 6vw, 48px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--green-deep);
+  }
+  .page-head p { color: var(--ink-soft); font-size: 16px; margin: 10px auto 0; max-width: 520px; }
+
+  /* ===== 游戏项目卡片 ===== */
+  .games {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 40px) clamp(30px, 5vw, 60px);
+    display: grid;
+    gap: 24px;
+  }
+  .card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #fff;
+    border-radius: 22px;
+    padding: clamp(18px, 3vw, 28px) clamp(20px, 3vw, 30px);
+    box-shadow: var(--shadow);
+    border: 4px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .card.yellow { border-color: var(--yellow); }
+  .card.purple { border-color: #8b5ecb; }
+  .card-info { min-width: 0; flex: 1 1 260px; }
+  .card-info h3 {
+    margin: 0 0 8px;
+    font-family: "Comic Neue", "Comic Sans MS", "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+    font-size: clamp(18px, 3vw, 24px);
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .card-info .tag {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    color: #fff;
+  }
+  .card.yellow .tag { background: var(--yellow); color: #2a2622; }
+  .card.purple .tag { background: #8b5ecb; }
+  .card-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 0 0 auto;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+  .btn.dl-yellow { background: #e0a800; }
+  .btn.dl-purple { background: #7b3fd6; }
+  .btn.play-purple { background: #3d3d8f; }
+
+  /* ===== 更多游戏提示 ===== */
+  .more {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 8px clamp(16px, 4vw, 40px) 8px;
+    text-align: center;
+    font-family: "Comic Neue", "Comic Sans MS", "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+    font-size: clamp(20px, 4vw, 28px);
+    color: var(--green-deep);
+  }
+  .more .plus { color: var(--red); }
+
+  /* ===== 页脚（黑板，与主页一致） ===== */
+  footer {
+    margin-top: 40px;
+    background: var(--board);
+    color: #f3efe3;
+    text-align: center;
+    padding: clamp(30px, 5vw, 52px) 20px;
+    border-radius: 28px 28px 0 0;
+  }
+  footer .chalk {
+    font-family: "Comic Neue", "Comic Sans MS", "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+    font-size: clamp(22px, 4vw, 30px);
+    margin: 0 0 8px;
+    color: #fff;
+  }
+  footer p { margin: 0; font-size: 14px; color: rgba(243, 239, 227, .8); }
+
+  @media (max-width: 640px) {
+    .brand { font-size: 18px; }
+    .brand .star { width: 26px; height: 26px; }
+    .nav a { padding: 8px 10px; font-size: 15px; }
+    .card { flex-direction: column; align-items: flex-start; }
+    .card-actions { width: 100%; }
+    .btn { flex: 1; }
+  }
+</style>
+<link rel="icon" href="data:image/webp;base64,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" type="image/webp">
+</head>
+<body>
+
+  <!-- ===== 顶部导航条（与主页一致） ===== -->
+  <header class="topbar">
+    <a class="brand" href="https://bcpage.pages.dev" aria-label="Baldi-chens 官网 首页">
+      <img class="star" src="data:image/webp;base64,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" alt="logo">
+      Baldi-chens 官网
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a href="https://bcpage.pages.dev/about" target="_blank" rel="noopener noreferrer">了解</a>
+      <a href="https://bcpage.pages.dev/game" class="active" rel="noopener noreferrer">游戏</a>
+      <a href="https://bcpage.pages.dev/other" target="_blank" rel="noopener noreferrer">其他</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== 页面标题 ===== -->
+    <section class="page-head">
+      <span class="eyebrow">GAME LIBRARY</span>
+      <h1>游戏库</h1>
+      <p>欢迎来到游戏库！挑选一个游戏开始游玩吧～</p>
+    </section>
+
+    <!-- ===== 游戏项目列表 ===== -->
+    <section class="games">
+      <article class="card yellow">
+        <div class="card-info">
+          <h3>陈羽楷的 Fucker 教育+（最新版）</h3>
+          <span class="tag">仅支持 Windows</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn dl-yellow" href="/game/CYKFB%2B%20V033.exe" download>下载</a>
+        </div>
+      </article>
+
+      <article class="card purple">
+        <div class="card-info">
+          <h3>VS Baldi-chens</h3>
+          <span class="tag">全端通用</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn dl-purple" href="/game/VSBC.html" download>下载</a>
+          <a class="btn play-purple" href="/game/VSBC.html" target="_blank" rel="noopener noreferrer">在线游玩</a>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===== 更多游戏提示 ===== -->
+    <p class="more">我们会制作更多游戏<span class="plus">!</span></p>
+  </main>
+
+  <!-- ===== 页脚（黑板，与主页一致） ===== -->
+  <footer>
+    <p class="chalk">Thanks for visiting!</p>
+    <p>© Baldi-chens 官网 · 欢迎再来玩</p>
+  </footer>
+
+</body>
 </html>
