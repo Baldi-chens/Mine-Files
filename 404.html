@@ -93,7 +93,7 @@
     max-width: 720px;
     margin: 0 auto;
   }
-  .error-image {
+  .error-svg {
     display: block;
     margin: 0 auto 24px;
     max-width: 420px;
@@ -153,7 +153,17 @@
   </header>
   <main>
     <section class="error">
-      <img class="error-image" src="https://bcpage.pages.dev/error.png" alt="错误提示">
+      <!-- 内嵌SVG错误图标，不再依赖外部error.png -->
+      <svg class="error-svg" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="240" fill="#fff" rx="12"/>
+        <!-- 黄色警告三角 -->
+        <path d="M200 40 L340 200 L60 200 Z" fill="#f6c325"/>
+        <!-- 感叹号 -->
+        <text x="200" y="160" font-size="90" font-family="Comic Neue, sans-serif" text-anchor="middle" fill="#2a2622">!</text>
+        <!-- 小装饰线条，贴合你网站手绘风格 -->
+        <path d="M90 170 Q130 150, 160 175" stroke="#2a2622" stroke-width="3" fill="none"/>
+        <path d="M240 175 Q280 150, 310 170" stroke="#2a2622" stroke-width="3" fill="none"/>
+      </svg>
       <h1>错误。</h1>
       <p>你访问的页面没有被定义。</p>
       <p>这个页面也许我没有做完，或者说你只是想玩我所以乱输一通。</p>
